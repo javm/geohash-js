@@ -112,13 +112,16 @@ var encodeGeoHash =  function(latitude, longitude) {
   return geohash;
 };
 
+
 var neighbors = function(geocode){
   var directions = [['top', 'right'], ['right', 'bottom'], ['bottom', 'left'], ['left', 'top']];
-  var neighborsList = directions.map(function(dirs){
-				       var point = calculateAdjacent(geocode, dirs[0]);
-				       return [point, calculateAdjacent(point, dirs[1])];
-				     });
-  return _.flatten(neighborsList);
+  var neighborsList = [];
+  directions.forEach(function(dirs){
+		       var point = calculateAdjacent(geocode, dirs[0]);
+		       neighborsList.push(point);
+		       neighborsList.push(calculateAdjacent(point, dirs[1]));
+		     });
+  return neighborsList;
 };
 
 var expand = function(geocode){
