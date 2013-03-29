@@ -4,13 +4,9 @@ geohash-js
 SUMMARY
 ======
 A node.js wrapper of Geohash Javascript Demonstration.
-[geohash-js](https://github.com/davetroy/geohash-js)
+[geohash-js](https://github.com/davetroy/geohash-js) (c) 2008 David Troy
 
-(c) 2008 David Troy
-
-Refactored by Jose A. Villarreal (c) 2013.
-
-Realesed under the MIT License
+Refactored by Jose A. Villarreal (c) 2013. Realesed under the MIT License
 
 BACKGROUND
 ==========
