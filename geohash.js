@@ -112,7 +112,6 @@ var encodeGeoHash =  function(latitude, longitude) {
   return geohash;
 };
 
-
 var neighbors = function(geocode){
   var directions = [['top', 'right'], ['right', 'bottom'], ['bottom', 'left'], ['left', 'top']];
   var neighborsList = [];
