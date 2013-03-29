@@ -4,7 +4,7 @@
 // (c) 2013 Jose A. Villarreal
 // Distributed under the MIT License
 
-(function(){
+var GeoHash = (function(){
 
    BITS = [16, 8, 4, 2, 1];
 
@@ -28,14 +28,14 @@
    BORDERS.left.odd = BORDERS.bottom.even;
    BORDERS.right.odd = BORDERS.top.even;
 
-   function refine_interval(interval, cd, mask) {
+   var refine_interval = function(interval, cd, mask) {
      if (cd&mask)
        interval[0] = (interval[0] + interval[1])/2;
      else
        interval[1] = (interval[0] + interval[1])/2;
-   }
+   };
 
-   function calculateAdjacent(srcHash, dir) {
+   var calculateAdjacent = function(srcHash, dir) {
      srcHash = srcHash.toLowerCase();
      var lastChr = srcHash.charAt(srcHash.length-1);
      var type = (srcHash.length % 2) ? 'odd' : 'even';
@@ -43,90 +43,97 @@
      if (BORDERS[dir][type].indexOf(lastChr)!=-1)
        base = calculateAdjacent(base, dir);
      return base + BASE32[NEIGHBORS[dir][type].indexOf(lastChr)];
-   }
+   };
 
-   function decodeGeoHash(geohash) {
-     var is_even = 1;
-     var lat = []; var lon = [];
-     lat[0] = -90.0;  lat[1] = 90.0;
-     lon[0] = -180.0; lon[1] = 180.0;
-     lat_err = 90.0;  lon_err = 180.0;
+  return{
+    decodeGeoHash: function(geohash) {
+      var is_even = 1;
+      var lat = []; var lon = [];
+      lat[0] = -90.0;  lat[1] = 90.0;
+      lon[0] = -180.0; lon[1] = 180.0;
+      lat_err = 90.0;  lon_err = 180.0;
 
-     for (i=0; i<geohash.length; i++) {
-       c = geohash[i];
-       cd = BASE32.indexOf(c);
-       for (j=0; j<5; j++) {
-	 mask = BITS[j];
-	 if (is_even) {
-	   lon_err /= 2;
-	   refine_interval(lon, cd, mask);
-	 } else {
-	   lat_err /= 2;
-	   refine_interval(lat, cd, mask);
-	 }
-	 is_even = !is_even;
-       }
-     }
-     lat[2] = (lat[0] + lat[1])/2;
-     lon[2] = (lon[0] + lon[1])/2;
+      for (i=0; i<geohash.length; i++) {
+	c = geohash[i];
+	cd = BASE32.indexOf(c);
+	for (j=0; j<5; j++) {
+	  mask = BITS[j];
+	  if (is_even) {
+	    lon_err /= 2;
+	    refine_interval(lon, cd, mask);
+	  } else {
+	    lat_err /= 2;
+	    refine_interval(lat, cd, mask);
+	  }
+	  is_even = !is_even;
+	}
+      }
+      lat[2] = (lat[0] + lat[1])/2;
+      lon[2] = (lon[0] + lon[1])/2;
 
-     return { latitude: lat, longitude: lon};
-   }
+      return { latitude: lat, longitude: lon};
+    },
 
-   function encodeGeoHash(latitude, longitude) {
-     var is_even=1;
-     var i=0;
-     var lat = []; var lon = [];
-     var bit=0;
-     var ch=0;
-     var precision = 12;
-     geohash = "";
+    encodeGeoHash: function(latitude, longitude) {
+      var is_even=1;
+      var i=0;
+      var lat = []; var lon = [];
+      var bit=0;
+      var ch=0;
+      var precision = 12;
+      geohash = "";
 
-     lat[0] = -90.0;  lat[1] = 90.0;
-     lon[0] = -180.0; lon[1] = 180.0;
+      lat[0] = -90.0;  lat[1] = 90.0;
+      lon[0] = -180.0; lon[1] = 180.0;
 
-     while (geohash.length < precision) {
-       if (is_even) {
-	 mid = (lon[0] + lon[1]) / 2;
-	 if (longitude > mid) {
-	   ch |= BITS[bit];
-	   lon[0] = mid;
-	 } else
-	   lon[1] = mid;
-       } else {
-	 mid = (lat[0] + lat[1]) / 2;
-	 if (latitude > mid) {
-	   ch |= BITS[bit];
-	   lat[0] = mid;
-	 } else
-	   lat[1] = mid;
-       }
+      while (geohash.length < precision) {
+	if (is_even) {
+	  mid = (lon[0] + lon[1]) / 2;
+	  if (longitude > mid) {
+	    ch |= BITS[bit];
+	    lon[0] = mid;
+	  } else
+	    lon[1] = mid;
+	} else {
+	  mid = (lat[0] + lat[1]) / 2;
+	  if (latitude > mid) {
+	    ch |= BITS[bit];
+	    lat[0] = mid;
+	  } else
+	    lat[1] = mid;
+	}
 
-       is_even = !is_even;
-       if (bit < 4)
-	 bit++;
-       else {
-	 geohash += BASE32[ch];
-	 bit = 0;
-	 ch = 0;
-       }
-     }
-     return geohash;
-   }
+	is_even = !is_even;
+	if (bit < 4)
+	  bit++;
+	else {
+	  geohash += BASE32[ch];
+	  bit = 0;
+	  ch = 0;
+	}
+      }
+      return geohash;
+    },
 
-   function neighbors(geocode){
-     var directions = [['top', 'right'], ['right', 'bottom'], ['bottom', 'left'], ['left', 'top']];
-     var neighborsList = directions.map(function(dirs){
-					    var point = calculateAdjacent(geocode, dirs[0]);
-					    return [point, calculateAdjacent(point, dirs[1])];
-					  });
-     return _.flatten(neighborsList);
-   }
+    calculateAdjacent: calculateAdjacent,
 
-   function expand(geocode){
-     var geocodes = neighbors(gecode);
-     geocodes.push(geocode);
-     return geocodes;
-   }
+    neighbors: function(geocode){
+      var directions = [['top', 'right'], ['right', 'bottom'], ['bottom', 'left'], ['left', 'top']];
+      var neighborsList = directions.map(function(dirs){
+					   var point = calculateAdjacent(geocode, dirs[0]);
+					   return [point, calculateAdjacent(point, dirs[1])];
+					 });
+      return _.flatten(neighborsList);
+    },
 
- }).call(this);
+    expand: function(geocode){
+      var geocodes = neighbors(gecode);
+      geocodes.push(geocode);
+      return geocodes;
+    }
+  };
+})();
+
+if (typeof exports == "undefined") { exports = {}; }
+
+exports.GeoHash = GeoHash;
