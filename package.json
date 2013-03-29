@@ -5,5 +5,5 @@
     "author": ["David Troy", "Jose A. Villarreal"],
     "email": "quetzal1910@gmail.com",
     "version": "0.0.1",
-    "main": "lib/geohash"
+    "main": "./geohash"
 }
